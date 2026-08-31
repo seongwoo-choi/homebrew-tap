@@ -1,0 +1,91 @@
+name: Update agentrec formula
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-agentrec-formula
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    outputs:
+      formula_sha: ${{ steps.candidate.outputs.formula_sha }}
+    steps:
+      - name: Check out tap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test updater
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Generate candidate Formula
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/update-agentrec.py
+
+      - name: Check Formula
+        id: candidate
+        run: |
+          ruby -c Formula/agentrec.rb
+          formula_sha="$(shasum -a 256 Formula/agentrec.rb | cut -d ' ' -f 1)"
+          test -n "$formula_sha"
+          echo "formula_sha=$formula_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Install and test Formula without write credentials
+        run: |
+          brew tap-new local/agentrec-test
+          tap_root="$(brew --repository local/agentrec-test)"
+          cp Formula/agentrec.rb "$tap_root/Formula/agentrec.rb"
+          brew install local/agentrec-test/agentrec
+          brew test local/agentrec-test/agentrec
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Check out tap again
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate Formula without executing release contents
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/update-agentrec.py
+
+      - name: Require verified candidate identity
+        env:
+          EXPECTED_SHA: ${{ needs.verify.outputs.formula_sha }}
+        run: |
+          actual_sha="$(sha256sum Formula/agentrec.rb | cut -d ' ' -f 1)"
+          test -n "$EXPECTED_SHA"
+          test "$actual_sha" = "$EXPECTED_SHA"
+          ruby -c Formula/agentrec.rb
+
+      - name: Commit verified Formula
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- Formula/agentrec.rb; then
+            exit 0
+          fi
+          version="$(ruby -ne 'if $_ =~ /agentrec_([0-9]+\.[0-9]+\.[0-9]+)_/; puts $1; exit; end' Formula/agentrec.rb)"
+          test -n "$version"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/agentrec.rb
+          git commit -m "agentrec ${version}"
+          gh auth setup-git
+          git push
