@@ -5,21 +5,21 @@ class Agentrec < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.4.0/agentrec_0.4.0_darwin_arm64.tar.gz"
-      sha256 "51f4457805840b212abb040f537d665bc2d7a0592c2c94df80ec5c2389263bac"
+      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.5.0/agentrec_0.5.0_darwin_arm64.tar.gz"
+      sha256 "ba3e52fba2dd2b9d4efd43ff43715436cbbae1b32fa974aac8f93e5ae303e1ad"
     else
-      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.4.0/agentrec_0.4.0_darwin_amd64.tar.gz"
-      sha256 "f45b45fe2ccd36e5a557f713c69365aa3bd953c197153eb95640b904c2c284ae"
+      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.5.0/agentrec_0.5.0_darwin_amd64.tar.gz"
+      sha256 "274c888e0204240917d6eabbf0c7ecb4b9ee85414b7504bd3ad17dac1c243f40"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.4.0/agentrec_0.4.0_linux_arm64.tar.gz"
-      sha256 "d4463114e0f273d5530ae964da6da17349a26777e80c0609316a0df02ba3b492"
+      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.5.0/agentrec_0.5.0_linux_arm64.tar.gz"
+      sha256 "0489a2b00f11ce87a3433e4859b821ba7145b1a87813334131f871542d704422"
     else
-      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.4.0/agentrec_0.4.0_linux_amd64.tar.gz"
-      sha256 "17d5d6e0b8b0f2e65b42cb549701f24f6c95b9492f8cd078735aa728d6ee3773"
+      url "https://github.com/seongwoo-choi/agentrec/releases/download/v0.5.0/agentrec_0.5.0_linux_amd64.tar.gz"
+      sha256 "ae0f339cdb0d78651835b91c8e49b3b7bce1d895937d7de62d3be08b60d876f6"
     end
   end
 
@@ -28,6 +28,6 @@ class Agentrec < Formula
   end
 
   test do
-    assert_match "agentrec v0.4.0", shell_output("#{bin}/agentrec version")
+    assert_match "agentrec v0.5.0", shell_output("#{bin}/agentrec version")
   end
 end
